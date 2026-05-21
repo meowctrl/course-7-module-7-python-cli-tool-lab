@@ -1,33 +1,32 @@
-# cli_tool.py
-
 import argparse
-from .models import Task, User
+from lib.models import Task, User
 
 users = {}
 
 alice = User("Alice")
 unit_test_task = Task("Write unit tests")
 alice.add_task(unit_test_task)
+users["Alice"] = alice
 
 def add_task(args):
-    user = users.get(args.user) or User(args.user)
-    users[args.user] = user
+    user = users.get(args.user)
+    if not user:
+        user = User(args.user)
+        users[args.user] = user
     task = Task(args.title)
     user.add_task(task)
 
-
 def complete_task(args):
     user = users.get(args.user)
-    if user:
-        for task in user.tasks:
-            if task.title == args.title:
-                task.complete()
-                return
-        print("Task not found.")
-    else:
-        print("User not found.")
+    if not user:
+        print(f"❌ User '{args.user}' not found.")
+        return
+    task = user.get_task_by_title(args.title)
+    if not task:
+        print(f"❌ Task '{args.title}' not found for user '{args.user}'.")
+        return
+    task.complete()
 
-# CLI entry point
 def main():
     parser = argparse.ArgumentParser(description="Task Manager CLI")
     subparsers = parser.add_subparsers()
